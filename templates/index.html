@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -62,7 +63,14 @@
     <button onclick="saveNickname()">OK</button>
   </div>
 
+  
   <div id="menu">
+    <p id="highScoreLabel">最高スコア: 0</p>
+    <p>フレンドID（自分）: <span id="myFriendId"></span></p>
+    <input id="friendInput" type="text" placeholder="フレンドのID" />
+    <button onclick="addFriend()">フレンド追加</button>
+    <ul id="friendList"></ul>
+    
     <h1>たぴテトリス</h1>
     <p id="nicknameLabel"></p>
     <button onclick="startGame()">ソロプレイ</button>
@@ -311,7 +319,73 @@
       sendGameState();
       requestAnimationFrame(update);
     };
+    
+    // 最高スコア表示
+    let highScore = Number(localStorage.getItem('highScore') || 0);
+    document.getElementById('highScoreLabel').textContent = '最高スコア: ' + highScore;
+
+    function updateScore(val) {
+      score += val;
+      scoreValue.textContent = score;
+    }
+
+    function playerReset() {
+      const pieces = "TJLOSZI";
+      player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+      player.pos.y = 0;
+      player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+      if (collide(arena, player)) {
+        arena.forEach(row => row.fill(0));
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('highScore', highScore);
+        }
+        alert('ゲームオーバー！スコア: ' + score);
+        score = 0;
+        updateScore(0);
+        canvas.style.display = 'none';
+        document.getElementById('score').style.display = 'none';
+        document.getElementById('menu').style.display = 'flex';
+        document.getElementById('highScoreLabel').textContent = '最高スコア: ' + highScore;
+      }
+    }
+
+    // フレンド機能
+    const myFriendId = Math.random().toString(36).substring(2, 8);
+    document.getElementById('myFriendId').textContent = myFriendId;
+
+    function addFriend() {
+      const friendId = document.getElementById('friendInput').value.trim();
+      if (!friendId) return;
+      let friends = JSON.parse(localStorage.getItem('friends') || '[]');
+      if (!friends.includes(friendId)) {
+        friends.push(friendId);
+        localStorage.setItem('friends', JSON.stringify(friends));
+        renderFriendList();
+      }
+    }
+
+    function renderFriendList() {
+      const list = document.getElementById('friendList');
+      list.innerHTML = '';
+      const friends = JSON.parse(localStorage.getItem('friends') || '[]');
+      friends.forEach(f => {
+        const li = document.createElement('li');
+        const joinBtn = document.createElement('button');
+        joinBtn.textContent = '対戦';
+        joinBtn.onclick = () => {
+          connectToMatch(f);
+          startGame();
+        };
+        li.textContent = f + ' ';
+        li.appendChild(joinBtn);
+        list.appendChild(li);
+      });
+    }
+
+    renderFriendList();
     </script>
+
 
 </body>
 </html>
