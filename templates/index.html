@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -75,10 +76,12 @@
   <div id="score">スコア: <span id="scoreValue">0</span></div>
 
   <script>
-    // ニックネーム処理
     const nicknameModal = document.getElementById('nicknameModal');
     const nicknameInput = document.getElementById('nicknameInput');
     const nicknameLabel = document.getElementById('nicknameLabel');
+    const canvas = document.getElementById('tetris');
+    const context = canvas.getContext('2d');
+    const scoreValue = document.getElementById('scoreValue');
 
     function saveNickname() {
       const name = nicknameInput.value.trim();
@@ -100,9 +103,6 @@
       nicknameLabel.textContent = 'こんにちは、' + savedName + ' さん！';
     }
 
-    // テトリスゲーム
-    const canvas = document.getElementById('tetris');
-    const context = canvas.getContext('2d');
     context.scale(20, 20);
     const matrix = {
       T: [[0,1,0],[1,1,1],[0,0,0]],
@@ -117,8 +117,6 @@
     const arena = Array.from({length: 20}, () => Array(12).fill(0));
 
     let score = 0;
-    const scoreValue = document.getElementById('scoreValue');
-
     function updateScore(val) {
       score += val;
       scoreValue.textContent = score;
@@ -215,6 +213,9 @@
         alert('ゲームオーバー！スコア: ' + score);
         score = 0;
         updateScore(0);
+        canvas.style.display = 'none';
+        document.getElementById('score').style.display = 'none';
+        document.getElementById('menu').style.display = 'flex';
       }
     }
 
@@ -247,10 +248,7 @@
       else if (e.key === "x") playerRotate(1);
     });
 
-    const player = {
-      pos: {x: 0, y: 0},
-      matrix: null
-    };
+    const player = { pos: {x: 0, y: 0}, matrix: null };
 
     function startGame() {
       document.getElementById('menu').style.display = 'none';
