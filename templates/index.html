@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -257,6 +256,62 @@
       playerReset();
       update();
     }
-  </script>
+  
+    // オンライン対戦クライアント処理
+    let socket;
+    let opponentMatrix = null;
+
+    function connectToMatch(roomId) {
+      socket = new WebSocket("ws://localhost:8080");
+
+      socket.addEventListener('open', () => {
+        socket.send(JSON.stringify({ type: 'join', roomId }));
+      });
+
+      socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'start') {
+          alert("対戦開始！");
+        }
+        if (data.type === 'opponent') {
+          opponentMatrix = data.matrix;
+        }
+      });
+    }
+
+    function sendGameState() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'state',
+          matrix: player.matrix,
+          score: score
+        }));
+      }
+    }
+
+    // 描画関数に相手表示追加
+    const originalDrawMatrix = drawMatrix;
+    drawMatrix = function(matrix, offset) {
+      originalDrawMatrix(matrix, offset);
+    };
+
+    const originalUpdate = update;
+    update = function(time = 0) {
+      const delta = time - lastTime;
+      lastTime = time;
+      dropCounter += delta;
+      if (dropCounter > dropInterval) playerDrop();
+      context.fillStyle = "#000";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      drawMatrix(arena, {x: 0, y: 0});
+      drawMatrix(player.matrix, player.pos);
+      if (opponentMatrix) {
+        drawMatrix(opponentMatrix, {x: 6, y: 0});
+      }
+      sendGameState();
+      requestAnimationFrame(update);
+    };
+    </script>
+
 </body>
 </html>
