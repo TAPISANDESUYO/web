@@ -1,10 +1,12 @@
-// server.js
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 8080 });
 
 const rooms = {}; // { roomId: [ws1, ws2] }
+const clients = new Set();
 
 wss.on('connection', (ws) => {
+  clients.add(ws);
+
   ws.on('message', (msg) => {
     const data = JSON.parse(msg);
 
@@ -31,9 +33,22 @@ wss.on('connection', (ws) => {
         }
       });
     }
+
+    if (data.type === 'chat') {
+      clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'chat',
+            nickname: data.nickname,
+            message: data.message
+          }));
+        }
+      });
+    }
   });
 
   ws.on('close', () => {
+    clients.delete(ws);
     const room = rooms[ws.roomId];
     if (room) {
       rooms[ws.roomId] = room.filter(client => client !== ws);
