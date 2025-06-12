@@ -97,7 +97,7 @@
   <div id="nicknameModal">
     <p>ニックネームを入力してください</p>
     <input id="nicknameInput" type="text" placeholder="たぴ...">
-    <button onclick="saveNickname()">OK</button>
+    <button id="nicknameOkBtn">OK</button>
   </div>
 
   <!-- メニュー -->
@@ -126,10 +126,15 @@
     <button onclick="sendChat()" style="width:100%; margin-top:5px;">送信</button>
   </div>
 
-  <!-- ゲーム処理スクリプト -->
   <script>
-    // この下のJS部分は既存コードの統合済み最新版として後で貼り付けます。
-    // 次のメッセージでJavaScript部分（整理済み・バグ修正済み）を送信します。
+    document.getElementById('nicknameOkBtn').addEventListener('click', function() {
+      const name = document.getElementById('nicknameInput').value.trim();
+      if (name) {
+        localStorage.setItem('nickname', name);
+        document.getElementById('nicknameModal').style.display = 'none';
+        document.getElementById('nicknameLabel').textContent = 'こんにちは、' + name + ' さん！';
+      }
+    });
   </script>
 </body>
 </html>
