@@ -105,14 +105,14 @@
     <p id="highScoreLabel">最高スコア: 0</p>
     <p>フレンドID（自分）: <span id="myFriendId"></span></p>
     <input id="friendInput" type="text" placeholder="フレンドのID">
-    <button onclick="addFriend()">フレンド追加</button>
+    <button id="addFriendBtn">フレンド追加</button>
     <ul id="friendList"></ul>
     <h1>たぴテトリス</h1>
     <p id="nicknameLabel"></p>
-    <button onclick="startGame()">ソロプレイ</button>
-    <button onclick="openMatch()">オンライン対戦</button>
-    <button>世界ランキング（準備中）</button>
-    <button onclick="resetNickname()">ニックネーム変更</button>
+    <button id="soloBtn">ソロプレイ</button>
+    <button id="onlineBtn">オンライン対戦</button>
+    <button disabled>世界ランキング（準備中）</button>
+    <button id="resetNicknameBtn">ニックネーム変更</button>
   </div>
 
   <!-- ゲーム画面 -->
@@ -123,17 +123,96 @@
   <div id="chat" style="margin-top:20px; width:300px;">
     <div id="chatLog" style="height:150px; overflow-y:auto; background:#333; border-radius:8px; padding:10px; font-size:0.9rem; margin-bottom:5px;"></div>
     <input id="chatInput" type="text" placeholder="チャットを入力..." style="width:100%; padding:8px; border-radius:6px; border:none;">
-    <button onclick="sendChat()" style="width:100%; margin-top:5px;">送信</button>
+    <button id="sendChatBtn" style="width:100%; margin-top:5px;">送信</button>
   </div>
 
   <script>
-    document.getElementById('nicknameOkBtn').addEventListener('click', function() {
-      const name = document.getElementById('nicknameInput').value.trim();
-      if (name) {
-        localStorage.setItem('nickname', name);
-        document.getElementById('nicknameModal').style.display = 'none';
-        document.getElementById('nicknameLabel').textContent = 'こんにちは、' + name + ' さん！';
+    document.addEventListener('DOMContentLoaded', () => {
+      const nicknameModal = document.getElementById('nicknameModal');
+      const nicknameInput = document.getElementById('nicknameInput');
+      const nicknameLabel = document.getElementById('nicknameLabel');
+      const highScoreLabel = document.getElementById('highScoreLabel');
+      const canvas = document.getElementById('tetris');
+      const context = canvas.getContext('2d');
+      const scoreValue = document.getElementById('scoreValue');
+      const menu = document.getElementById('menu');
+
+      let score = 0;
+      let highScore = Number(localStorage.getItem('highScore') || 0);
+      highScoreLabel.textContent = '最高スコア: ' + highScore;
+
+      const savedName = localStorage.getItem('nickname');
+      if (savedName) {
+        nicknameModal.style.display = 'none';
+        nicknameLabel.textContent = 'こんにちは、' + savedName + ' さん！';
       }
+
+      document.getElementById('nicknameOkBtn').addEventListener('click', () => {
+        const name = nicknameInput.value.trim();
+        if (name) {
+          localStorage.setItem('nickname', name);
+          nicknameModal.style.display = 'none';
+          nicknameLabel.textContent = 'こんにちは、' + name + ' さん！';
+        }
+      });
+
+      document.getElementById('resetNicknameBtn').addEventListener('click', () => {
+        localStorage.removeItem('nickname');
+        location.reload();
+      });
+
+      document.getElementById('soloBtn').addEventListener('click', () => {
+        menu.style.display = 'none';
+        canvas.style.display = 'block';
+        document.getElementById('score').style.display = 'block';
+        alert('ソロプレイ開始（ゲームロジック未実装）');
+      });
+
+      document.getElementById('onlineBtn').addEventListener('click', () => {
+        alert('オンライン対戦機能は後日実装されます');
+      });
+
+      document.getElementById('addFriendBtn').addEventListener('click', () => {
+        const friendId = document.getElementById('friendInput').value.trim();
+        if (!friendId) return;
+        let friends = JSON.parse(localStorage.getItem('friends') || '[]');
+        if (!friends.includes(friendId)) {
+          friends.push(friendId);
+          localStorage.setItem('friends', JSON.stringify(friends));
+          renderFriendList();
+        }
+      });
+
+      function renderFriendList() {
+        const list = document.getElementById('friendList');
+        list.innerHTML = '';
+        const friends = JSON.parse(localStorage.getItem('friends') || '[]');
+        friends.forEach(f => {
+          const li = document.createElement('li');
+          const joinBtn = document.createElement('button');
+          joinBtn.textContent = '対戦';
+          joinBtn.onclick = () => alert(f + ' と対戦開始（未実装）');
+          li.textContent = f + ' ';
+          li.appendChild(joinBtn);
+          list.appendChild(li);
+        });
+      }
+
+      document.getElementById('myFriendId').textContent = Math.random().toString(36).substring(2, 8);
+      renderFriendList();
+
+      document.getElementById('sendChatBtn').addEventListener('click', () => {
+        const input = document.getElementById('chatInput');
+        const msg = input.value.trim();
+        if (!msg) return;
+        const chatLog = document.getElementById('chatLog');
+        const name = localStorage.getItem('nickname') || '匿名';
+        const p = document.createElement('p');
+        p.textContent = `${name}: ${msg}`;
+        chatLog.appendChild(p);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        input.value = '';
+      });
     });
   </script>
 </body>
