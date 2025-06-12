@@ -2,231 +2,521 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>たぴテトリス</title>
-  <style>
+  
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1e1e2f, #2a2a3f);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5em;
+    color: #fcd34d;
+  }
+  canvas {
+    background: #222;
+    border: 4px solid #fcd34d;
+    box-shadow: 0 0 20px #fcd34d;
+    display: none;
+  }
+  #menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px 40px;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  button {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 10px;
+    background: #fcd34d;
+    color: #000;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: #fde68a;
+  }
+  #nicknameModal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  #nicknameModal input, #friendInput {
+    padding: 10px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    border: none;
+    margin: 10px;
+    width: 200px;
+    text-align: center;
+  }
+  #score {
+    margin-top: 10px;
+    font-size: 1.4rem;
+    display: none;
+    color: #fcd34d;
+  }
+  #friendList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+  #friendList li {
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px 10px;
+    border-radius: 8px;
+  }
+</style>
+
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #2a2a3f);
+      background: #111;
       color: #fff;
+      font-family: sans-serif;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 20px;
+      height: 100vh;
+      flex-direction: column;
     }
     canvas {
       background: #222;
-      border: 4px solid #fcd34d;
-      box-shadow: 0 0 20px #fcd34d;
+      border: 4px solid #fff;
       display: none;
-      margin-top: 10px;
     }
     #menu {
       display: flex;
       flex-direction: column;
-      align-items: center;
       gap: 10px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      align-items: center;
     }
     button {
       padding: 10px 20px;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       border: none;
-      border-radius: 10px;
-      background: #fcd34d;
-      color: #000;
+      border-radius: 5px;
+      background: #444;
+      color: #fff;
       cursor: pointer;
-      width: 100%;
     }
     #nicknameModal {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.8);
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
     }
-    #nicknameModal input, #friendInput, #chatInput {
+    #nicknameModal input {
       padding: 10px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      width: 80%;
-      max-width: 300px;
-      margin-bottom: 10px;
+      font-size: 1.2rem;
     }
     #score {
+      margin-top: 10px;
       font-size: 1.2rem;
-      margin-top: 10px;
       display: none;
-    }
-    #friendPanel, #chat {
-      margin-top: 10px;
-      width: 100%;
-      max-width: 320px;
-    }
-    #chatLog {
-      background: #333;
-      border-radius: 8px;
-      padding: 10px;
-      height: 150px;
-      overflow-y: auto;
-      font-size: 0.9rem;
-    }
-    #friendList {
-      list-style: none;
-      padding: 0;
-    }
-    #friendList li {
-      display: flex;
-      justify-content: space-between;
-      background: rgba(255,255,255,0.05);
-      padding: 6px 10px;
-      margin-top: 4px;
-      border-radius: 6px;
     }
   </style>
 </head>
 <body>
   <div id="nicknameModal">
-    <p>ニックネームを入力</p>
-    <input id="nicknameInput" type="text" placeholder="Tapi..." />
+    <p>ニックネームを入力してください</p>
+    <input id="nicknameInput" type="text" placeholder="たぴ..." />
     <button onclick="saveNickname()">OK</button>
   </div>
 
+  
   <div id="menu">
     <p id="highScoreLabel">最高スコア: 0</p>
-    <button onclick="toggleFriendUI()">フレンド</button>
-    <div id="friendPanel" style="display:none;">
-      フレンドID（自分）：<span id="myFriendId"></span><br/>
-      <input id="friendInput" placeholder="フレンドのID" />
-      <button onclick="addFriend()">フレンド追加</button>
-      <ul id="friendList"></ul>
-    </div>
-
+    <p>フレンドID（自分）: <span id="myFriendId"></span></p>
+    <input id="friendInput" type="text" placeholder="フレンドのID" />
+    <button onclick="addFriend()">フレンド追加</button>
+    <ul id="friendList"></ul>
+    
     <h1>たぴテトリス</h1>
     <p id="nicknameLabel"></p>
     <button onclick="startGame()">ソロプレイ</button>
-    <button onclick="openMatch()">オンライン対戦</button>
-    <button disabled>世界ランキング（準備中）</button>
+    <button>オンライン対戦（準備中）</button>
+    <button>世界ランキング（準備中）</button>
     <button onclick="resetNickname()">ニックネーム変更</button>
   </div>
 
   <canvas id="tetris" width="240" height="400"></canvas>
   <div id="score">スコア: <span id="scoreValue">0</span></div>
 
-  <div id="chat">
-    <div id="chatLog"></div>
-    <input id="chatInput" placeholder="チャットを入力..." />
-    <button onclick="sendChat()">送信</button>
-  </div>
+  <script>
+    const nicknameModal = document.getElementById('nicknameModal');
+    const nicknameInput = document.getElementById('nicknameInput');
+    const nicknameLabel = document.getElementById('nicknameLabel');
+    const canvas = document.getElementById('tetris');
+    const context = canvas.getContext('2d');
+    const scoreValue = document.getElementById('scoreValue');
 
-<script>
-let socket;
-let opponentMatrix = null;
-let highScore = Number(localStorage.getItem('highScore') || 0);
-let score = 0;
-const nicknameModal = document.getElementById('nicknameModal');
-const nicknameInput = document.getElementById('nicknameInput');
-const nicknameLabel = document.getElementById('nicknameLabel');
-const scoreValue = document.getElementById('scoreValue');
-document.getElementById('highScoreLabel').textContent = '最高スコア: ' + highScore;
-
-function saveNickname() {
-  const name = nicknameInput.value.trim();
-  if (name) {
-    localStorage.setItem('nickname', name);
-    nicknameModal.style.display = 'none';
-    nicknameLabel.textContent = 'こんにちは、' + name + ' さん！';
-  }
-}
-function resetNickname() {
-  localStorage.removeItem('nickname');
-  location.reload();
-}
-const savedName = localStorage.getItem('nickname');
-if (savedName) {
-  nicknameModal.style.display = 'none';
-  nicknameLabel.textContent = 'こんにちは、' + savedName + ' さん！';
-}
-
-function updateScore(val) {
-  score += val;
-  scoreValue.textContent = score;
-}
-
-function toggleFriendUI() {
-  const p = document.getElementById("friendPanel");
-  p.style.display = p.style.display === "none" ? "block" : "none";
-}
-const myFriendId = Math.random().toString(36).substring(2, 8);
-document.getElementById('myFriendId').textContent = myFriendId;
-function addFriend() {
-  const friendId = document.getElementById('friendInput').value.trim();
-  if (!friendId) return;
-  let friends = JSON.parse(localStorage.getItem('friends') || '[]');
-  if (!friends.includes(friendId)) {
-    friends.push(friendId);
-    localStorage.setItem('friends', JSON.stringify(friends));
-    renderFriendList();
-  }
-}
-function renderFriendList() {
-  const list = document.getElementById('friendList');
-  list.innerHTML = '';
-  const friends = JSON.parse(localStorage.getItem('friends') || '[]');
-  friends.forEach(f => {
-    const li = document.createElement('li');
-    const joinBtn = document.createElement('button');
-    joinBtn.textContent = '対戦';
-    joinBtn.onclick = () => {
-      connectToMatch(f);
-      startGame();
-    };
-    li.textContent = f + ' ';
-    li.appendChild(joinBtn);
-    list.appendChild(li);
-  });
-}
-renderFriendList();
-function openMatch() {
-  const matchId = prompt("マッチIDを入力（空でランダム）:");
-  const id = matchId || Math.random().toString(36).substring(2, 8);
-  connectToMatch(id);
-  startGame();
-}
-function connectToMatch(roomId) {
-  socket = new WebSocket("ws://localhost:8080");
-  socket.addEventListener('open', () => {
-    socket.send(JSON.stringify({ type: 'join', roomId }));
-  });
-  socket.addEventListener('message', (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'start') alert("対戦開始！");
-    if (data.type === 'opponent') opponentMatrix = data.matrix;
-    if (data.type === 'chat') {
-      const chatLog = document.getElementById('chatLog');
-      const p = document.createElement('p');
-      p.textContent = `${data.nickname}: ${data.message}`;
-      chatLog.appendChild(p);
-      chatLog.scrollTop = chatLog.scrollHeight;
+    function saveNickname() {
+      const name = nicknameInput.value.trim();
+      if (name) {
+        localStorage.setItem('nickname', name);
+        nicknameModal.style.display = 'none';
+        nicknameLabel.textContent = 'こんにちは、' + name + ' さん！';
+      }
     }
-  });
-}
-function sendChat() {
-  const input = document.getElementById('chatInput');
-  const msg = input.value.trim();
-  if (!msg || !socket || socket.readyState !== WebSocket.OPEN) return;
-  const name = localStorage.getItem('nickname') || '匿名';
-  socket.send(JSON.stringify({ type: 'chat', nickname: name, message: msg }));
-  input.value = '';
-}
-</script>
+
+    function resetNickname() {
+      localStorage.removeItem('nickname');
+      location.reload();
+    }
+
+    const savedName = localStorage.getItem('nickname');
+    if (savedName) {
+      nicknameModal.style.display = 'none';
+      nicknameLabel.textContent = 'こんにちは、' + savedName + ' さん！';
+    }
+
+    context.scale(20, 20);
+    const matrix = {
+      T: [[0,1,0],[1,1,1],[0,0,0]],
+      O: [[2,2],[2,2]],
+      L: [[0,0,3],[3,3,3],[0,0,0]],
+      J: [[4,0,0],[4,4,4],[0,0,0]],
+      I: [[0,0,0,0],[5,5,5,5],[0,0,0,0],[0,0,0,0]],
+      S: [[0,6,6],[6,6,0],[0,0,0]],
+      Z: [[7,7,0],[0,7,7],[0,0,0]],
+    };
+    const colors = ["#000", "#FF0", "#F70", "#0FF", "#00F", "#F00", "#0F0", "#A0F"];
+    const arena = Array.from({length: 20}, () => Array(12).fill(0));
+
+    let score = 0;
+    function updateScore(val) {
+      score += val;
+      scoreValue.textContent = score;
+    }
+
+    function drawMatrix(matrix, offset) {
+      matrix.forEach((row, y) =>
+        row.forEach((val, x) => {
+          if (val !== 0) {
+            context.fillStyle = colors[val];
+            context.fillRect(x + offset.x, y + offset.y, 1, 1);
+          }
+        })
+      );
+    }
+
+    function merge(arena, player) {
+      player.matrix.forEach((row, y) =>
+        row.forEach((val, x) => {
+          if (val !== 0) {
+            arena[y + player.pos.y][x + player.pos.x] = val;
+          }
+        })
+      );
+    }
+
+    function collide(arena, player) {
+      const m = player.matrix;
+      const o = player.pos;
+      return m.some((row, y) =>
+        row.some((val, x) =>
+          val !== 0 &&
+          (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0
+        )
+      );
+    }
+
+    function rotate(matrix, dir) {
+      for (let y = 0; y < matrix.length; ++y)
+        for (let x = 0; x < y; ++x)
+          [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+      if (dir > 0) matrix.forEach(row => row.reverse());
+      else matrix.reverse();
+    }
+
+    function playerDrop() {
+      player.pos.y++;
+      if (collide(arena, player)) {
+        player.pos.y--;
+        merge(arena, player);
+        playerReset();
+        arenaSweep();
+      }
+      dropCounter = 0;
+    }
+
+    function playerMove(dir) {
+      player.pos.x += dir;
+      if (collide(arena, player)) player.pos.x -= dir;
+    }
+
+    function playerRotate(dir) {
+      const pos = player.pos.x;
+      rotate(player.matrix, dir);
+      let offset = 1;
+      while (collide(arena, player)) {
+        player.pos.x += offset;
+        offset = -(offset + (offset > 0 ? 1 : -1));
+        if (offset > player.matrix[0].length) {
+          rotate(player.matrix, -dir);
+          player.pos.x = pos;
+          return;
+        }
+      }
+    }
+
+    function arenaSweep() {
+      outer: for (let y = arena.length - 1; y >= 0; --y) {
+        if (arena[y].every(v => v !== 0)) {
+          arena.splice(y, 1);
+          arena.unshift(Array(12).fill(0));
+          updateScore(100);
+        }
+      }
+    }
+
+    function playerReset() {
+      const pieces = "TJLOSZI";
+      player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+      player.pos.y = 0;
+      player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+      if (collide(arena, player)) {
+        arena.forEach(row => row.fill(0));
+        alert('ゲームオーバー！スコア: ' + score);
+        score = 0;
+        updateScore(0);
+        canvas.style.display = 'none';
+        document.getElementById('score').style.display = 'none';
+        document.getElementById('menu').style.display = 'flex';
+      }
+    }
+
+    function createPiece(type) {
+      return matrix[type];
+    }
+
+    let dropCounter = 0;
+    let dropInterval = 1000;
+    let lastTime = 0;
+
+    function update(time = 0) {
+      const delta = time - lastTime;
+      lastTime = time;
+      dropCounter += delta;
+      if (dropCounter > dropInterval) playerDrop();
+      context.fillStyle = "#000";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      drawMatrix(arena, {x: 0, y: 0});
+      drawMatrix(player.matrix, player.pos);
+      requestAnimationFrame(update);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (!canvas.style.display.includes('block')) return;
+      if (e.key === "ArrowLeft") playerMove(-1);
+      else if (e.key === "ArrowRight") playerMove(1);
+      else if (e.key === "ArrowDown") playerDrop();
+      else if (e.key === "z") playerRotate(-1);
+      else if (e.key === "x") playerRotate(1);
+    });
+
+    const player = { pos: {x: 0, y: 0}, matrix: null };
+
+    function startGame() {
+      document.getElementById('menu').style.display = 'none';
+      canvas.style.display = 'block';
+      document.getElementById('score').style.display = 'block';
+      playerReset();
+      update();
+    }
+  
+    // オンライン対戦クライアント処理
+    let socket;
+    let opponentMatrix = null;
+
+    function connectToMatch(roomId) {
+      socket = new WebSocket("ws://localhost:8080");
+
+      socket.addEventListener('open', () => {
+        socket.send(JSON.stringify({ type: 'join', roomId }));
+      });
+
+      socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'start') {
+          alert("対戦開始！");
+        }
+        if (data.type === 'opponent') {
+          opponentMatrix = data.matrix;
+        }
+      });
+    }
+
+    function sendGameState() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: 'state',
+          matrix: player.matrix,
+          score: score
+        }));
+      }
+    }
+
+    // 描画関数に相手表示追加
+    const originalDrawMatrix = drawMatrix;
+    drawMatrix = function(matrix, offset) {
+      originalDrawMatrix(matrix, offset);
+    };
+
+    const originalUpdate = update;
+    update = function(time = 0) {
+      const delta = time - lastTime;
+      lastTime = time;
+      dropCounter += delta;
+      if (dropCounter > dropInterval) playerDrop();
+      context.fillStyle = "#000";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      drawMatrix(arena, {x: 0, y: 0});
+      drawMatrix(player.matrix, player.pos);
+      if (opponentMatrix) {
+        drawMatrix(opponentMatrix, {x: 6, y: 0});
+      }
+      sendGameState();
+      requestAnimationFrame(update);
+    };
+    
+    // 最高スコア表示
+    let highScore = Number(localStorage.getItem('highScore') || 0);
+    document.getElementById('highScoreLabel').textContent = '最高スコア: ' + highScore;
+
+    function updateScore(val) {
+      score += val;
+      scoreValue.textContent = score;
+    }
+
+    function playerReset() {
+      const pieces = "TJLOSZI";
+      player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+      player.pos.y = 0;
+      player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+      if (collide(arena, player)) {
+        arena.forEach(row => row.fill(0));
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('highScore', highScore);
+        }
+        alert('ゲームオーバー！スコア: ' + score);
+        score = 0;
+        updateScore(0);
+        canvas.style.display = 'none';
+        document.getElementById('score').style.display = 'none';
+        document.getElementById('menu').style.display = 'flex';
+        document.getElementById('highScoreLabel').textContent = '最高スコア: ' + highScore;
+      }
+    }
+
+    // フレンド機能
+    const myFriendId = Math.random().toString(36).substring(2, 8);
+    document.getElementById('myFriendId').textContent = myFriendId;
+
+    function addFriend() {
+      const friendId = document.getElementById('friendInput').value.trim();
+      if (!friendId) return;
+      let friends = JSON.parse(localStorage.getItem('friends') || '[]');
+      if (!friends.includes(friendId)) {
+        friends.push(friendId);
+        localStorage.setItem('friends', JSON.stringify(friends));
+        renderFriendList();
+      }
+    }
+
+    function renderFriendList() {
+      const list = document.getElementById('friendList');
+      list.innerHTML = '';
+      const friends = JSON.parse(localStorage.getItem('friends') || '[]');
+      friends.forEach(f => {
+        const li = document.createElement('li');
+        const joinBtn = document.createElement('button');
+        joinBtn.textContent = '対戦';
+        joinBtn.onclick = () => {
+          connectToMatch(f);
+          startGame();
+        };
+        li.textContent = f + ' ';
+        li.appendChild(joinBtn);
+        list.appendChild(li);
+      });
+    }
+
+    renderFriendList();
+    
+    function openMatch() {
+      const matchId = prompt("マッチIDを入力（空でランダム）:");
+      const id = matchId || Math.random().toString(36).substring(2, 8);
+      connectToMatch(id);
+      startGame();
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chatInput');
+      const msg = input.value.trim();
+      if (!msg || !socket || socket.readyState !== WebSocket.OPEN) return;
+      const name = localStorage.getItem('nickname') || '匿名';
+      socket.send(JSON.stringify({
+        type: 'chat',
+        nickname: name,
+        message: msg
+      }));
+      input.value = '';
+    }
+
+    if (socket) {
+      socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'chat') {
+          const chatLog = document.getElementById('chatLog');
+          const p = document.createElement('p');
+          p.textContent = `${data.nickname}: ${data.message}`;
+          chatLog.appendChild(p);
+          chatLog.scrollTop = chatLog.scrollHeight;
+        }
+      });
+    }
+    </script>
+
+
+
+
+  <div id="chat" style="margin-top:20px; width:300px;">
+    <div id="chatLog" style="height:150px; overflow-y:auto; background:#333; border-radius:8px; padding:10px; font-size:0.9rem; margin-bottom:5px;"></div>
+    <input id="chatInput" type="text" placeholder="チャットを入力..." style="width:100%; padding:8px; border-radius:6px; border:none;" />
+    <button onclick="sendChat()" style="width:100%; margin-top:5px;">送信</button>
+  </div>
 </body>
+</html>
+
 </html>
