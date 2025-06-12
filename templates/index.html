@@ -2,218 +2,262 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>TAPIMOD</title>
+  <title>たぴテトリス</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #1e1e2f, #2a2a3f);
-      color: #fff;
+      font-family: sans-serif;
+      background: linear-gradient(to bottom right, #1e1e2f, #2a2a3f);
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
     }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 0.5em;
-      color: #fcd34d;
-    }
     canvas {
-      background: #222;
-      border: 4px solid #fcd34d;
-      box-shadow: 0 0 20px #fcd34d;
       display: none;
+      border: 4px solid gold;
+      background: #222;
+      box-shadow: 0 0 12px gold;
     }
-    #menu {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 20px 40px;
-      border-radius: 20px;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    #menu, #chat, #ranking {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin: 10px;
     }
     button {
-      padding: 12px 24px;
-      font-size: 1.1rem;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: gold;
       border: none;
-      border-radius: 10px;
-      background: #fcd34d;
-      color: #000;
       cursor: pointer;
-      transition: background 0.3s;
     }
-    button:hover {
-      background: #fde68a;
-    }
-    #nicknameModal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.85);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-    #nicknameModal input, #friendInput {
-      padding: 10px;
-      font-size: 1.1rem;
-      border-radius: 8px;
-      border: none;
-      margin: 10px;
-      width: 200px;
-      text-align: center;
-    }
-    #score {
-      margin-top: 10px;
-      font-size: 1.4rem;
-      display: none;
-      color: #fcd34d;
-    }
-    #friendList {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      width: 100%;
-    }
-    #friendList li {
-      margin: 5px 0;
-      display: flex;
-      justify-content: space-between;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 5px 10px;
-      border-radius: 8px;
-    }
+    button:hover { background: #ffef99; }
+    input { padding: 8px; border-radius: 5px; }
+    ul { list-style: none; padding: 0; }
   </style>
 </head>
 <body>
-  <!-- モーダル -->
-  <div id="nicknameModal">
-    <p>ニックネームを入力してください</p>
-    <input id="nicknameInput" type="text" placeholder="たぴ...">
-    <button id="nicknameOkBtn">OK</button>
-  </div>
-
-  <!-- メニュー -->
   <div id="menu">
-    <p id="highScoreLabel">最高スコア: 0</p>
-    <p>フレンドID（自分）: <span id="myFriendId"></span></p>
-    <input id="friendInput" type="text" placeholder="フレンドのID">
-    <button id="addFriendBtn">フレンド追加</button>
-    <ul id="friendList"></ul>
     <h1>たぴテトリス</h1>
-    <p id="nicknameLabel"></p>
-    <button id="soloBtn">ソロプレイ</button>
-    <button id="onlineBtn">オンライン対戦</button>
-    <button disabled>世界ランキング（準備中）</button>
-    <button id="resetNicknameBtn">ニックネーム変更</button>
+    <p>ニックネーム: <input id="nickname" value="たぴ" /></p>
+    <p><button onclick="startSolo()">ソロプレイ</button>
+       <button onclick="startOnline()">オンライン対戦</button>
+       <button onclick="loadRanking()">世界ランキング</button></p>
+    <p>マッチID: <input id="roomId" placeholder="空欄なら自動" /></p>
   </div>
 
-  <!-- ゲーム画面 -->
-  <canvas id="tetris" width="240" height="400"></canvas>
-  <div id="score">スコア: <span id="scoreValue">0</span></div>
+  <canvas id="game" width="240" height="400"></canvas>
+  <div id="score" style="display:none">スコア: <span id="scoreVal">0</span></div>
 
-  <!-- チャット欄 -->
-  <div id="chat" style="margin-top:20px; width:300px;">
-    <div id="chatLog" style="height:150px; overflow-y:auto; background:#333; border-radius:8px; padding:10px; font-size:0.9rem; margin-bottom:5px;"></div>
-    <input id="chatInput" type="text" placeholder="チャットを入力..." style="width:100%; padding:8px; border-radius:6px; border:none;">
-    <button id="sendChatBtn" style="width:100%; margin-top:5px;">送信</button>
+  <div id="chat" style="display:none">
+    <div id="log" style="height:100px; overflow:auto; background:#333; padding:5px; border-radius:5px;"></div>
+    <input id="msg" placeholder="メッセージ" />
+    <button onclick="sendChat()">送信</button>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const nicknameModal = document.getElementById('nicknameModal');
-      const nicknameInput = document.getElementById('nicknameInput');
-      const nicknameLabel = document.getElementById('nicknameLabel');
-      const highScoreLabel = document.getElementById('highScoreLabel');
-      const canvas = document.getElementById('tetris');
-      const context = canvas.getContext('2d');
-      const scoreValue = document.getElementById('scoreValue');
-      const menu = document.getElementById('menu');
+  <div id="ranking" style="display:none">
+    <h2>世界ランキング</h2>
+    <ul id="rankList"></ul>
+  </div>
 
-      let score = 0;
-      let highScore = Number(localStorage.getItem('highScore') || 0);
-      highScoreLabel.textContent = '最高スコア: ' + highScore;
+<script>
+let socket;
+let canvas = document.getElementById('game');
+let context = canvas.getContext('2d');
+context.scale(20, 20);
 
-      const savedName = localStorage.getItem('nickname');
-      if (savedName) {
-        nicknameModal.style.display = 'none';
-        nicknameLabel.textContent = 'こんにちは、' + savedName + ' さん！';
+const colors = ["#000", "#FF0", "#F70", "#0FF", "#00F", "#F00", "#0F0", "#A0F"];
+const matrixTypes = {
+  T: [[0,1,0],[1,1,1],[0,0,0]],
+  O: [[2,2],[2,2]],
+  L: [[0,0,3],[3,3,3],[0,0,0]],
+  J: [[4,0,0],[4,4,4],[0,0,0]],
+  I: [[0,0,0,0],[5,5,5,5],[0,0,0,0],[0,0,0,0]],
+  S: [[0,6,6],[6,6,0],[0,0,0]],
+  Z: [[7,7,0],[0,7,7],[0,0,0]],
+};
+
+const arena = Array.from({length: 20}, () => Array(12).fill(0));
+let player = {pos:{x:0,y:0}, matrix:null};
+let dropCounter = 0, dropInterval = 1000, lastTime = 0;
+let score = 0;
+
+function createPiece(type) {
+  return matrixTypes[type];
+}
+
+function drawMatrix(matrix, offset) {
+  matrix.forEach((row, y) => {
+    row.forEach((val, x) => {
+      if (val !== 0) {
+        context.fillStyle = colors[val];
+        context.fillRect(x + offset.x, y + offset.y, 1, 1);
       }
+    });
+  });
+}
 
-      document.getElementById('nicknameOkBtn').addEventListener('click', () => {
-        const name = nicknameInput.value.trim();
-        if (name) {
-          localStorage.setItem('nickname', name);
-          nicknameModal.style.display = 'none';
-          nicknameLabel.textContent = 'こんにちは、' + name + ' さん！';
-        }
-      });
-
-      document.getElementById('resetNicknameBtn').addEventListener('click', () => {
-        localStorage.removeItem('nickname');
-        location.reload();
-      });
-
-      document.getElementById('soloBtn').addEventListener('click', () => {
-        menu.style.display = 'none';
-        canvas.style.display = 'block';
-        document.getElementById('score').style.display = 'block';
-        alert('ソロプレイ開始（ゲームロジック未実装）');
-      });
-
-      document.getElementById('onlineBtn').addEventListener('click', () => {
-        alert('オンライン対戦機能は後日実装されます');
-      });
-
-      document.getElementById('addFriendBtn').addEventListener('click', () => {
-        const friendId = document.getElementById('friendInput').value.trim();
-        if (!friendId) return;
-        let friends = JSON.parse(localStorage.getItem('friends') || '[]');
-        if (!friends.includes(friendId)) {
-          friends.push(friendId);
-          localStorage.setItem('friends', JSON.stringify(friends));
-          renderFriendList();
-        }
-      });
-
-      function renderFriendList() {
-        const list = document.getElementById('friendList');
-        list.innerHTML = '';
-        const friends = JSON.parse(localStorage.getItem('friends') || '[]');
-        friends.forEach(f => {
-          const li = document.createElement('li');
-          const joinBtn = document.createElement('button');
-          joinBtn.textContent = '対戦';
-          joinBtn.onclick = () => alert(f + ' と対戦開始（未実装）');
-          li.textContent = f + ' ';
-          li.appendChild(joinBtn);
-          list.appendChild(li);
-        });
+function merge(arena, player) {
+  player.matrix.forEach((row, y) => {
+    row.forEach((val, x) => {
+      if (val !== 0) {
+        arena[y + player.pos.y][x + player.pos.x] = val;
       }
+    });
+  });
+}
 
-      document.getElementById('myFriendId').textContent = Math.random().toString(36).substring(2, 8);
-      renderFriendList();
+function collide(arena, player) {
+  return player.matrix.some((row, y) =>
+    row.some((val, x) => val !== 0 && arena[y + player.pos.y]?.[x + player.pos.x] !== 0)
+  );
+}
 
-      document.getElementById('sendChatBtn').addEventListener('click', () => {
-        const input = document.getElementById('chatInput');
-        const msg = input.value.trim();
-        if (!msg) return;
-        const chatLog = document.getElementById('chatLog');
-        const name = localStorage.getItem('nickname') || '匿名';
-        const p = document.createElement('p');
-        p.textContent = `${name}: ${msg}`;
-        chatLog.appendChild(p);
-        chatLog.scrollTop = chatLog.scrollHeight;
-        input.value = '';
+function playerDrop() {
+  player.pos.y++;
+  if (collide(arena, player)) {
+    player.pos.y--;
+    merge(arena, player);
+    arenaSweep();
+    playerReset();
+  }
+  dropCounter = 0;
+}
+
+function arenaSweep() {
+  outer: for (let y = arena.length - 1; y >= 0; --y) {
+    if (arena[y].every(v => v !== 0)) {
+      arena.splice(y, 1);
+      arena.unshift(Array(12).fill(0));
+      score += 100;
+      document.getElementById('scoreVal').textContent = score;
+    }
+  }
+}
+
+function playerReset() {
+  const pieces = "TJLOSZI";
+  player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+  player.pos.y = 0;
+  player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+  if (collide(arena, player)) {
+    alert('ゲームオーバー！ スコア: ' + score);
+    if (socket) socket.emit('submit-score', { nickname: getName(), score });
+    cancelAnimationFrame(animId);
+    location.reload();
+  }
+}
+
+function rotate(matrix, dir) {
+  for (let y = 0; y < matrix.length; ++y) {
+    for (let x = 0; x < y; ++x) {
+      [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+    }
+  }
+  if (dir > 0) matrix.forEach(row => row.reverse());
+  else matrix.reverse();
+}
+
+function update(t = 0) {
+  const dt = t - lastTime;
+  lastTime = t;
+  dropCounter += dt;
+  if (dropCounter > dropInterval) playerDrop();
+  context.fillStyle = "#000";
+  context.fillRect(0,0,canvas.width,canvas.height);
+  drawMatrix(arena, {x:0,y:0});
+  drawMatrix(player.matrix, player.pos);
+  if (socket) socket.emit('state', { roomId: currentRoom, matrix: player.matrix, score });
+  animId = requestAnimationFrame(update);
+}
+
+let currentRoom = null;
+let animId;
+
+function getName() {
+  return document.getElementById('nickname').value || '匿名';
+}
+
+function startSolo() {
+  document.getElementById('menu').style.display = 'none';
+  canvas.style.display = 'block';
+  document.getElementById('score').style.display = 'block';
+  resetGame();
+  update();
+}
+
+function startOnline() {
+  const room = document.getElementById('roomId').value.trim() || Math.random().toString(36).substring(2, 8);
+  currentRoom = room;
+  socket = io("wss://YOUR_SERVER:8080");
+  socket.emit('join', { roomId: room, nickname: getName() });
+
+  socket.on('start', () => {
+    alert('対戦開始！');
+    document.getElementById('menu').style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('score').style.display = 'block';
+    document.getElementById('chat').style.display = 'block';
+    resetGame();
+    update();
+  });
+
+  socket.on('opponent', ({ matrix }) => {
+    // 表示は未実装。必要なら右側描画可能。
+  });
+
+  socket.on('chat', ({ nickname, message }) => {
+    const p = document.createElement('p');
+    p.textContent = `${nickname}: ${message}`;
+    document.getElementById('log').appendChild(p);
+  });
+}
+
+function sendChat() {
+  const msg = document.getElementById('msg').value;
+  if (msg && socket) {
+    socket.emit('chat', { roomId: currentRoom, nickname: getName(), message: msg });
+    document.getElementById('msg').value = '';
+  }
+}
+
+function resetGame() {
+  arena.forEach(row => row.fill(0));
+  score = 0;
+  document.getElementById('scoreVal').textContent = score;
+  playerReset();
+}
+
+function loadRanking() {
+  fetch("https://YOUR_SERVER:8080/ranking")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('ranking').style.display = 'block';
+      const ul = document.getElementById('rankList');
+      ul.innerHTML = '';
+      data.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.nickname} - ${entry.score}`;
+        ul.appendChild(li);
       });
     });
-  </script>
+}
+
+document.addEventListener("keydown", e => {
+  if (!canvas.style.display.includes('block')) return;
+  if (e.key === "ArrowLeft") player.pos.x--;
+  else if (e.key === "ArrowRight") player.pos.x++;
+  else if (e.key === "ArrowDown") playerDrop();
+  else if (e.key === "z") playerRotate(-1);
+  else if (e.key === "x") playerRotate(1);
+});
+</script>
 </body>
 </html>
