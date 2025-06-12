@@ -196,7 +196,7 @@ function startSolo() {
 function startOnline() {
   const room = document.getElementById('roomId').value.trim() || Math.random().toString(36).substring(2, 8);
   currentRoom = room;
-  socket = io("wss://YOUR_SERVER:8080");
+  socket = io("ws://p.freepy.jp:8080");
   socket.emit('join', { roomId: room, nickname: getName() });
 
   socket.on('start', () => {
@@ -207,10 +207,6 @@ function startOnline() {
     document.getElementById('chat').style.display = 'block';
     resetGame();
     update();
-  });
-
-  socket.on('opponent', ({ matrix }) => {
-    // 表示は未実装。必要なら右側描画可能。
   });
 
   socket.on('chat', ({ nickname, message }) => {
@@ -236,7 +232,7 @@ function resetGame() {
 }
 
 function loadRanking() {
-  fetch("https://YOUR_SERVER:8080/ranking")
+  fetch("http://p.freepy.jp:8080/ranking")
     .then(res => res.json())
     .then(data => {
       document.getElementById('ranking').style.display = 'block';
