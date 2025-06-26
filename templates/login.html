@@ -7,40 +7,39 @@
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             height: 100vh;
+            background: linear-gradient(135deg, #78E6D0, #A9C3E7);
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-
-        .login-container {
-            background-color: white;
-            padding: 40px 30px;
+        .login-box {
+            background: white;
             border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 40px 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
-            text-align: center;
+            box-sizing: border-box;
         }
-
-        .login-container h2 {
+        .login-box h2 {
+            text-align: center;
             margin-bottom: 25px;
             color: #333;
         }
-
-        .login-container input[type="text"],
-        .login-container input[type="password"] {
+        .login-box input[type="text"],
+        .login-box input[type="password"] {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 20px;
             border: 1px solid #ccc;
             border-radius: 8px;
+            background: #eef4ff;
             font-size: 16px;
+            box-sizing: border-box;
         }
-
-        .login-container input[type="submit"] {
+        .login-box input[type="submit"] {
             width: 100%;
             padding: 12px;
             background-color: #4CAF50;
@@ -51,20 +50,30 @@
             cursor: pointer;
             transition: 0.3s;
         }
-
-        .login-container input[type="submit"]:hover {
+        .login-box input[type="submit"]:hover {
             background-color: #45a049;
+        }
+        .login-box .link {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .login-box .link a {
+            color: #333;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="login-box">
         <h2>ログイン</h2>
         <form method="POST">
             <input type="text" name="username" placeholder="ユーザー名" required>
             <input type="password" name="password" placeholder="パスワード" required>
             <input type="submit" value="ログイン">
         </form>
+        <div class="link">
+            <a href="/register">新規登録はこちら</a>
+        </div>
     </div>
 </body>
 </html>
